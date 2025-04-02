@@ -25,15 +25,15 @@ const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kambaz",
   resave: false,
   saveUninitialized: false,
-  cookie: {}
+  cookie: {
+    sameSite: "none",
+    secure: true,
+    domain: "kambaz-node-server-app-fq5a.onrender.com",
+  },
 };
 
 if (process.env.NODE_ENV !== "development") {
   sessionOptions.proxy = true;
-  sessionOptions.cookie = {
-    sameSite: "none",   
-    secure: true, 
-  };
 }
 
 app.use(session(sessionOptions));
