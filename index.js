@@ -25,14 +25,15 @@ const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kambaz",
   resave: false,
   saveUninitialized: false,
+  cookie: {}
 };
 
 if (process.env.NODE_ENV !== "development") {
   sessionOptions.proxy = true;
   sessionOptions.cookie = {
-    sameSite: "none",
-    secure: true,
-    domain: process.env.NODE_SERVER_DOMAIN,
+    sameSite: "none",   
+    secure: true, 
+    domain: process.env.NODE_SERVER_DOMAIN, 
   };
 }
 
