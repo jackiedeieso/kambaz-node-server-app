@@ -12,9 +12,11 @@ import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
 
 const app = express();
 
+const netlifyOrigin = "https://jackie-deieso-kambaz.netlify.app";
+
 app.use(cors({
+  origin: netlifyOrigin,
   credentials: true,
-  origin: process.env.NETLIFY_URL || "https://jackie-deiso-kambaz.netlify.app",
 }));
 
 app.use(express.json());
