@@ -12,6 +12,8 @@ import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
 
 const app = express();
 
+app.set("trust proxy", 1); 
+
 const netlifyOrigin = "https://jackie-deieso-kambaz.netlify.app";
 
 app.use(cors({
@@ -34,6 +36,8 @@ if (process.env.NODE_ENV !== "development") {
     secure: true, 
   };
 }
+
+
 
 app.use(session(sessionOptions));
 
