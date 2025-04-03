@@ -3,7 +3,7 @@ import * as courseDao from "../Courses/dao.js";
 import * as enrollmentsDao from "../Enrollments/dao.js";
 
 export default function UserRoutes(app) {
-  // Dev Login (for bypassing login in dev)
+  // Dev Login
   app.post("/api/users/devlogin", (req, res) => {
     const adminUser = {
       _id: "123456",
@@ -59,16 +59,30 @@ export default function UserRoutes(app) {
   };
 
   const signin = (req, res) => {
-    console.log("BODY RECEIVED:", req.body); // 🔍
+    console.log("BODY RECEIVED:", req.body);
     const { username, password } = req.body;
     const currentUser = dao.findUserByCredentials(username, password);
-    if (currentUser) {
-      req.session["currentUser"] = currentUser;
-      res.json(currentUser);
-    } else {
-      res.status(401).json({ message: "Unable to login. Try again later." });
+
+    if (!currentUser) {
+      console.log("❌ Login failed for", username);
+      return res.status(401).json({ message: "Unable to login. Try again later." });
     }
+
+    req.session["currentUser"] = currentUser;
+    console.log("✅ Login success:", currentUser);
+    console.log("🍪 Session ID:", req.sessionID);
+
+    // ✅ Explicitly set session cookie (REQUIRED for Netlify <-> Render)
+    res.cookie("connect.sid", req.sessionID, {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+      path: "/"
+    });
+
+    res.json(currentUser);
   };
+
   const signout = (req, res) => {
     req.session.destroy();
     res.sendStatus(200);
@@ -103,7 +117,7 @@ export default function UserRoutes(app) {
     enrollmentsDao.enrollUserInCourse(currentUser._id, newCourse._id);
     res.json(newCourse);
   };
-  
+
   // Route registrations
   app.post("/api/users", createUser);
   app.get("/api/users", findAllUsers);
