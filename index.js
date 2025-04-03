@@ -3,6 +3,7 @@ import cors from 'cors';
 import session from 'express-session';
 import "dotenv/config.js";
 
+// Route imports
 import Lab5 from "./Lab5/index.js";
 import UserRoutes from "./Kambaz/Users/routes.js";
 import CourseRoutes from "./Kambaz/Courses/routes.js";
@@ -12,10 +13,9 @@ import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
 
 const app = express();
 
-app.set("trust proxy", 1); 
+app.set("trust proxy", 1);
 
 const netlifyOrigin = "https://jackie-deieso-kambaz.netlify.app";
-
 app.use(cors({
   origin: netlifyOrigin,
   credentials: true,
@@ -27,17 +27,12 @@ const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kambaz",
   resave: false,
   saveUninitialized: false,
+  proxy: true, 
+  cookie: {
+    sameSite: "none", 
+    secure: true     
+  }
 };
-
-if (process.env.NODE_ENV !== "development") {
-  sessionOptions.proxy = true;
-  sessionOptions.cookie = {
-    sameSite: "none",
-    secure: true, 
-  };
-}
-
-
 
 app.use(session(sessionOptions));
 
@@ -48,12 +43,11 @@ ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentRoutes(app);
 
+app.get("/", (req, res) => {
+  res.send("Backend is alive!");
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-});
-
-
-app.get("/", (req, res) => {
-  res.send("Backend is alive!");
 });
