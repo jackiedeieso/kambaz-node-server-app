@@ -16,70 +16,78 @@ export default function UserRoutes(app) {
     res.json(adminUser);
   });
 
-  const createUser = (req, res) => {
-    const newUser = dao.createUser(req.body);
-    res.json(newUser);
+  const createUser = async (req, res) => {
+    const user = await dao.createUser(req.body);
+    res.json(user);
+  };
+  app.post("/api/users", createUser);
+
+  const deleteUser = async (req, res) => {
+    const status = await dao.deleteUser(req.params.userId);
+    res.json(status);
   };
 
-  const deleteUser = (req, res) => {
-    const { userId } = req.params;
-    const status = dao.deleteUser(userId);
-    res.sendStatus(status ? 200 : 404);
-  };
+  const findAllUsers = async (req, res) => {
+    const { role, name } = req.query;
 
-  const findAllUsers = (req, res) => {
-    const users = dao.findAllUsers();
+    if (role && name) {
+      const users = await dao.findUsersByRoleAndName(role, name);
+      return res.json(users);
+    }
+
+    if (role) {
+      const users = await dao.findUsersByRole(role);
+      return res.json(users);
+    }
+
+    if (name) {
+      const users = await dao.findUsersByPartialName(name);
+      return res.json(users);
+    }
+
+    const users = await dao.findAllUsers();
     res.json(users);
   };
 
-  const findUserById = (req, res) => {
+  const findUserById = async (req, res) => {
     const { userId } = req.params;
-    const user = dao.findUserById(userId);
+    const user = await dao.findUserById(userId);
     user ? res.json(user) : res.sendStatus(404);
   };
 
-  const updateUser = (req, res) => {
-    const userId = req.params.userId;
+  const updateUser = async (req, res) => {
+    const { userId } = req.params;
     const userUpdates = req.body;
-    dao.updateUser(userId, userUpdates);
-    const updatedUser = dao.findUserById(userId);
-    req.session["currentUser"] = updatedUser;
-    res.json(updatedUser);
+    await dao.updateUser(userId, userUpdates);
+    const currentUser = req.session["currentUser"];
+    if (currentUser && currentUser._id === userId) {
+      req.session["currentUser"] = { ...currentUser, ...userUpdates };
+    }
+    res.json({ ...userUpdates, _id: userId });
   };
+  app.put("/api/users/:userId", updateUser);
 
-  const signup = (req, res) => {
-    const existingUser = dao.findUserByUsername(req.body.username);
+  const signup = async (req, res) => {
+    const existingUser = await dao.findUserByUsername(req.body.username);
     if (existingUser) {
       res.status(400).json({ message: "Username already taken" });
       return;
     }
-    const newUser = dao.createUser(req.body);
+    const newUser = await dao.createUser(req.body);
     req.session["currentUser"] = newUser;
     res.json(newUser);
   };
 
-  const signin = (req, res) => {
-    console.log("BODY RECEIVED:", req.body);
+  const signin = async (req, res) => {
     const { username, password } = req.body;
-    const currentUser = dao.findUserByCredentials(username, password);
+    const currentUser = await dao.findUserByCredentials(username, password);
 
     if (!currentUser) {
-      console.log("❌ Login failed for", username);
       return res.status(401).json({ message: "Unable to login. Try again later." });
     }
 
+    // ✅ Let express-session handle the cookie, no need to set it manually
     req.session["currentUser"] = currentUser;
-    console.log("✅ Login success:", currentUser);
-    console.log("🍪 Session ID:", req.sessionID);
-
-    // ✅ Explicitly set session cookie (REQUIRED for Netlify <-> Render)
-    res.cookie("connect.sid", req.sessionID, {
-      sameSite: "none",
-      secure: true,
-      httpOnly: true,
-      path: "/"
-    });
-
     res.json(currentUser);
   };
 
@@ -93,7 +101,7 @@ export default function UserRoutes(app) {
     currentUser ? res.json(currentUser) : res.sendStatus(401);
   };
 
-  const findCoursesForEnrolledUser = (req, res) => {
+  const findCoursesForEnrolledUser = async (req, res) => {
     let { userId } = req.params;
     if (userId === "current") {
       const currentUser = req.session["currentUser"];
@@ -103,18 +111,18 @@ export default function UserRoutes(app) {
       }
       userId = currentUser._id;
     }
-    const courses = courseDao.findCoursesForEnrolledUser(userId);
+    const courses = await courseDao.findCoursesForEnrolledUser(userId);
     res.json(courses);
   };
 
-  const createCourse = (req, res) => {
+  const createCourse = async (req, res) => {
     const currentUser = req.session["currentUser"];
     if (!currentUser) {
       res.sendStatus(401);
       return;
     }
-    const newCourse = courseDao.createCourse(req.body);
-    enrollmentsDao.enrollUserInCourse(currentUser._id, newCourse._id);
+    const newCourse = await courseDao.createCourse(req.body);
+    await enrollmentsDao.enrollUserInCourse(currentUser._id, newCourse._id);
     res.json(newCourse);
   };
 
