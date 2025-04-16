@@ -15,10 +15,10 @@ import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
 import QuizRoutes from "./Kambaz/Quizzes/routes.js";       
 import AttemptRoutes from "./Kambaz/Attempts/routes.js";   
 
-const CONNECTION_STRING = "mongodb://127.0.0.1:27017/kambaz";
+const CONNECTION_STRING = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/kambaz";
 
 import { setMaxListeners } from 'events';
-setMaxListeners(20); // or a number higher than 10
+setMaxListeners(20); 
 
 mongoose
   .connect(CONNECTION_STRING)
