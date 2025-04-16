@@ -30,7 +30,7 @@ mongoose
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://jackie-deieso-kambaz.netlify.app",
+  "https://jackie-deieso-kambaz.netlify.app/",
 ];
 
 const app = express();

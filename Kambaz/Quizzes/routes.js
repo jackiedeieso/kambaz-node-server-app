@@ -24,7 +24,7 @@ const QuizRoutes = (app) => {
     res.json(quiz);
   });
 
-  // ✅ NEW: Get quiz by slug + courseId
+  // Get quiz by slug + courseId
   router.get('/api/courses/:courseId/quizzes/:slug', async (req, res) => {
     const quiz = await findQuizBySlug(req.params.courseId, req.params.slug);
     if (!quiz) return res.sendStatus(404);
