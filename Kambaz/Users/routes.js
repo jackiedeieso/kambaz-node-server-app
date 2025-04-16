@@ -86,29 +86,25 @@ export default function UserRoutes(app) {
   const signin = async (req, res) => {
     const { username, password } = req.body;
     console.log("🧪 Login attempt received:", { username, password });
-    console.log("Session after signin:", req.session);
   
     try {
       const user = await dao.findUserByUsername(username);
-      if (!user) {
-        console.log("❌ No user found");
+      console.log("🕵️ Found user:", user);
+  
+      if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
   
-      if (user.password !== password) {
-        console.log("❌ Incorrect password");
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-  
-      console.log("✅ Login successful for:", user.username);
       req.session.currentUser = user;
-      res.json(user);
+      req.session.save(() => {
+        console.log("✅ Session saved:", req.session);
+        res.json(user);
+      });
     } catch (err) {
       console.error("🔥 Signin error:", err);
       res.status(500).json({ message: "Server error" });
     }
   };
-
   const signout = (req, res) => {
     req.session.destroy();
     res.sendStatus(200);
