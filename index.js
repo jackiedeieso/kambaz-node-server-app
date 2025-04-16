@@ -30,7 +30,7 @@ mongoose
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://jackie-deieso-kambaz.netlify.app/",
+  "https://jackie-deieso-kambaz.netlify.app",
 ];
 
 const app = express();
@@ -40,13 +40,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "https://jackie-deieso-kambaz.netlify.app", 
     credentials: true,
   })
 );
