@@ -2,50 +2,53 @@ import * as dao from "./dao.js";
 import * as modulesDao from "../Modules/dao.js";
 
 export default function CourseRoutes(app) {
-  app.get("/api/courses", (req, res) => {
-    const courses = dao.findAllCourses();
-    res.send(courses);
+  // Get all courses
+  app.get("/api/courses", async (req, res) => {
+    const courses = await dao.findAllCourses();
+    res.json(courses);
   });
 
-  app.delete("/api/courses/:courseId", (req, res) => {
+  // Get modules for a course
+  app.get("/api/courses/:courseId/modules", async (req, res) => {
     const { courseId } = req.params;
-    const status = dao.deleteCourse(courseId);
-    res.send(status);
-  });
-
-  app.put("/api/courses/:courseId", (req, res) => {
-    const { courseId } = req.params;
-    const courseUpdates = req.body;
-  
-    const updatedCourse = dao.updateCourse(courseId, courseUpdates);
-    if (!updatedCourse) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-  
-    res.json(updatedCourse);
-  });
-  
-
-  app.get("/api/courses/:courseId/modules", (req, res) => {
-    const { courseId } = req.params;
-    const modules = modulesDao.findModulesForCourse(courseId);
+    const modules = await modulesDao.findModulesForCourse(courseId);
     res.json(modules);
   });
 
-  app.post("/api/courses/:courseId/modules", (req, res) => {
+  // Create a new module for a course
+  app.post("/api/courses/:courseId/modules", async (req, res) => {
     const { courseId } = req.params;
     const module = {
       ...req.body,
       course: courseId,
     };
-    const newModule = modulesDao.createModule(module);
-    res.send(newModule);
+    const newModule = await modulesDao.createModule(module);
+    res.json(newModule);
   });
 
-  app.post("/api/courses", (req, res) => {
-    const newCourse = dao.createCourse(req.body);
+  // Delete a course and associated enrollments
+  app.delete("/api/courses/:courseId", async (req, res) => {
+    const { courseId } = req.params;
+    const status = await dao.deleteCourse(courseId);
+    res.json(status);
+  });
+
+  // Update a course
+  app.put("/api/courses/:courseId", async (req, res) => {
+    const { courseId } = req.params;
+    const courseUpdates = req.body;
+    const updatedCourse = await dao.updateCourse(courseId, courseUpdates);
+
+    if (!updatedCourse) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    res.json(updatedCourse);
+  });
+
+  // Create a new course
+  app.post("/api/courses", async (req, res) => {
+    const newCourse = await dao.createCourse(req.body);
     res.json(newCourse);
   });
-
 }
-

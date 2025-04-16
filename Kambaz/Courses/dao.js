@@ -1,41 +1,33 @@
-import Database from "../Database/index.js";
 import { v4 as uuidv4 } from "uuid";
+import CourseModel from "./model.js";
+import EnrollmentModel from "../Enrollments/model.js"; // adjust path if needed
 
-export function findAllCourses() {
-  return Database.courses;
-}
+// Find all courses
+export const findAllCourses = () => CourseModel.find();
 
-export const createCourse = (course) => {
+// Create a new course
+export const createCourse = async (course) => {
   const newCourse = { ...course, _id: uuidv4() };
-  Database.courses.push(newCourse);
-  return newCourse;
+  return CourseModel.create(newCourse);
 };
 
-export function deleteCourse(courseId) {
-    const { courses, enrollments } = Database;
-    Database.courses = courses.filter((course) => course._id !== courseId);
-    Database.enrollments = enrollments.filter(
-      (enrollment) => enrollment.course !== courseId
-  );}
+// Delete a course and clean up enrollments
+export const deleteCourse = async (courseId) => {
+  await EnrollmentModel.deleteMany({ course: courseId });
+  return CourseModel.deleteOne({ _id: courseId });
+};
 
-  export const updateCourse = (courseId, updates) => {
-    const index = Database.courses.findIndex((c) => c._id === courseId);
-    if (index === -1) return null;
-  
-    Database.courses[index] = { ...Database.courses[index], ...updates };
-    return Database.courses[index];
-  };
+// Update course by ID
+export const updateCourse = async (courseId, updates) => {
+  return CourseModel.findByIdAndUpdate(courseId, updates, { new: true });
+};
 
-    export const findCoursesForEnrolledUser = (userId) => {
-      const { courses, enrollments } = Database;
-      const enrolledCourseIds = enrollments
-        .filter((e) => e.user === userId)
-        .map((e) => e.course);
-      const enrolledCourses = courses.filter((c) => enrolledCourseIds.includes(c._id));
-      return enrolledCourses;
-    };
+// Find all courses a user is enrolled in
+export const findCoursesForEnrolledUser = async (userId) => {
+  const enrollments = await EnrollmentModel.find({ user: userId });
+  const courseIds = enrollments.map((e) => e.course);
+  return CourseModel.find({ _id: { $in: courseIds } });
+};
 
-    export const findCourseById = (id) =>
-      Database.courses.find((course) => course._id === id);
-  
-  
+// Find single course by ID
+export const findCourseById = (id) => CourseModel.findById(id);

@@ -1,34 +1,33 @@
-import Database from "../Database/index.js";
 import { v4 as uuidv4 } from "uuid";
+import EnrollmentModel from "./model.js";
 
+// Get all enrollments
 export const findAllEnrollments = async () => {
-  return Database.enrollments;
+  return EnrollmentModel.find();
 };
 
+// Enroll a user in a course
 export const enrollUserInCourse = async (userId, courseId) => {
-  const { enrollments } = Database;
-
-  const existing = enrollments.find((e) => e.user === userId && e.course === courseId);
+  const existing = await EnrollmentModel.findOne({ user: userId, course: courseId });
   if (existing) return existing;
 
-  const newEnrollment = { _id: uuidv4(), user: userId, course: courseId };
-  enrollments.push(newEnrollment);
-  return newEnrollment;
+  const newEnrollment = {
+    _id: uuidv4(),
+    user: userId,
+    course: courseId,
+  };
+
+  return EnrollmentModel.create(newEnrollment);
 };
 
+// Unenroll a user from a course
 export const unenrollUserFromCourse = async (userId, courseId) => {
-  const { enrollments } = Database;
-  const index = enrollments.findIndex((e) => e.user === userId && e.course === courseId);
-  if (index !== -1) {
-    enrollments.splice(index, 1);
-    return true;
-  }
-  return false;
+  const result = await EnrollmentModel.deleteOne({ user: userId, course: courseId });
+  return result.deletedCount > 0;
 };
 
+// Find all course IDs for a specific user
 export const findCoursesForUser = async (userId) => {
-  const { enrollments } = Database;
-  return enrollments
-    .filter((e) => e.user === userId)
-    .map((e) => e.course);
+  const enrollments = await EnrollmentModel.find({ user: userId });
+  return enrollments.map((e) => e.course);
 };

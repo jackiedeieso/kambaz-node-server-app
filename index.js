@@ -3,7 +3,7 @@ import cors from "cors";
 import session from "express-session";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-dotenv.config(); // ✅ Load env vars first
+dotenv.config(); 
 
 // Route imports
 import Lab5 from "./Lab5/index.js";
@@ -12,14 +12,20 @@ import CourseRoutes from "./Kambaz/Courses/routes.js";
 import ModuleRoutes from "./Kambaz/Modules/routes.js";
 import AssignmentRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
+import QuizRoutes from "./Kambaz/Quizzes/routes.js";       
+import AttemptRoutes from "./Kambaz/Attempts/routes.js";   
 
-// ✅ MongoDB connection
-const CONNECTION_STRING =
-  process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz";
+const CONNECTION_STRING = "mongodb://127.0.0.1:27017/kambaz";
+
+import { setMaxListeners } from 'events';
+setMaxListeners(20); // or a number higher than 10
 
 mongoose
   .connect(CONNECTION_STRING)
-  .then(() => console.log("✅ Connected to MongoDB"))
+  .then(() => {
+    console.log("✅ Connected to MongoDB");
+    console.log("📛 Using database:", mongoose.connection.name);
+  })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 const allowedOrigins = [
@@ -60,13 +66,15 @@ app.use(
   })
 );
 
-// Route mounting
+// Route mounting 
 UserRoutes(app);
 CourseRoutes(app);
 Lab5(app);
 ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentRoutes(app);
+QuizRoutes(app);
+AttemptRoutes(app);
 
 app.get("/", (req, res) => {
   res.send("Backend is alive!");

@@ -3,6 +3,11 @@ import * as courseDao from "../Courses/dao.js";
 import * as enrollmentsDao from "../Enrollments/dao.js";
 
 export default function UserRoutes(app) {
+  app.get("/api/dev/users", async (req, res) => {
+    const users = await dao.findAllUsers();
+    console.log("🧾 All users in DB:", users);
+    res.json(users);
+  });
   // Dev Login
   app.post("/api/users/devlogin", (req, res) => {
     const adminUser = {
@@ -80,15 +85,27 @@ export default function UserRoutes(app) {
 
   const signin = async (req, res) => {
     const { username, password } = req.body;
-    const currentUser = await dao.findUserByCredentials(username, password);
-
-    if (!currentUser) {
-      return res.status(401).json({ message: "Unable to login. Try again later." });
+    console.log("🧪 Login attempt received:", { username, password });
+  
+    try {
+      const user = await dao.findUserByUsername(username);
+      if (!user) {
+        console.log("❌ No user found");
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+  
+      if (user.password !== password) {
+        console.log("❌ Incorrect password");
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+  
+      console.log("✅ Login successful for:", user.username);
+      req.session.currentUser = user;
+      res.json(user);
+    } catch (err) {
+      console.error("🔥 Signin error:", err);
+      res.status(500).json({ message: "Server error" });
     }
-
-    // ✅ Let express-session handle the cookie, no need to set it manually
-    req.session["currentUser"] = currentUser;
-    res.json(currentUser);
   };
 
   const signout = (req, res) => {
@@ -138,4 +155,7 @@ export default function UserRoutes(app) {
   app.post("/api/users/profile", profile);
   app.get("/api/users/:userId/courses", findCoursesForEnrolledUser);
   app.post("/api/users/current/courses", createCourse);
+
+  console.log("✅ User routes loaded");
 }
+

@@ -1,8 +1,8 @@
 import * as dao from "./dao.js";
-import db from "../Database/index.js";
+import * as courseDao from "../Courses/dao.js"; // ✅ Needed for course lookups
 
 export default function EnrollmentRoutes(app) {
-
+  // Enroll a user in a course
   app.post("/api/enrollments", async (req, res) => {
     const { userId, courseId } = req.body;
     if (!userId || !courseId) {
@@ -13,6 +13,7 @@ export default function EnrollmentRoutes(app) {
     res.json(enrollment);
   });
 
+  // Unenroll a user from a course
   app.delete("/api/enrollments", async (req, res) => {
     const { userId, courseId } = req.body;
     if (!userId || !courseId) {
@@ -27,15 +28,17 @@ export default function EnrollmentRoutes(app) {
     }
   });
 
+  // Get all courses a user is enrolled in
   app.get("/api/enrollments/users/:userId/courses", async (req, res) => {
     const { userId } = req.params;
     const courseIds = await dao.findCoursesForUser(userId);
     const allCourses = await Promise.all(
       courseIds.map((id) => courseDao.findCourseById(id))
     );
-    res.json(allCourses.filter(Boolean)); // Filter out any not found
+    res.json(allCourses.filter(Boolean)); // Only return courses that still exist
   });
 
+  // Get all enrollments
   app.get("/api/enrollments", async (req, res) => {
     const enrollments = await dao.findAllEnrollments();
     res.json(enrollments);
